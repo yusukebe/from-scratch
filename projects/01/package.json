@@ -1,0 +1,6 @@
+{
+  "name": "01",
+  "scripts": {
+    "dev": "wrangler dev src/index.ts"
+  }
+}

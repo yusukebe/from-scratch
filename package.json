@@ -1,0 +1,12 @@
+{
+  "name": "from-scratch-monorepo",
+  "workspaces": [
+    "projects/*"
+  ],
+  "private": true,
+  "devDependencies": {
+    "@hono/eslint-config": "^2.0.0",
+    "@types/node": "^22.15.3",
+    "wrangler": "^4.14.1"
+  }
+}
