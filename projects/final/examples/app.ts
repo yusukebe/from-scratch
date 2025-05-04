@@ -1,15 +1,28 @@
 import { createApp } from '../src'
-import { Hono } from 'hono'
-import { logger } from 'hono/logger'
 
-const app = createApp()
-const honoApp = new Hono()
-honoApp.use(logger())
+const app = createApp().setHelper('html', (_, html: string) => {
+  return new Response(html, {
+    headers: {
+      'Content-Type': 'text/html',
+    },
+  })
+})
 
-app.on('GET', '*', honoApp.fetch)
+// Variables in the middleware
+app.on('*', '*', (c) => {
+  c.vars['foo'] = 'bar'
+})
 
-app.on('GET', '/welcome', () => {
-  return new Response('Welcome!')
+// Custom helper
+app.on('GET', '/', (c) => {
+  return c.helper('html', `<html><body>${c.vars['foo']}</body></html>`)
+})
+
+// Middleware for the response
+app.on('*', '*', (c) => {
+  if (c.res) {
+    c.res.headers.append('X-Custom', 'My message')
+  }
 })
 
 export default app

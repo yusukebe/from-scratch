@@ -1,40 +1,54 @@
-import type { Route, Handler, Methods } from './types'
+import type { Route, Helper, Handler, Methods, Fetch, Context } from './types'
 
-type App = {
-  on: (method: Methods, path: string, handler: Handler) => App
-  fetch: (
-    req: Request,
-    env?: {},
-    executionContext?: ExecutionContext
-  ) => Response | Promise<Response>
-}
+export function createApp<THelpers extends Record<string, Helper> = {}>() {
+  type App<H extends Record<string, Helper>> = {
+    on(method: Methods, path: string, handler: Handler<H>): App<H>
+    setHelper<K extends string, F extends Helper>(name: K, helper: F): App<H & Record<K, F>>
+    fetch: Fetch
+  }
 
-export function createApp() {
   const routes: Route[] = []
+  const helpers = {} as THelpers
+  const vars = {}
 
-  const app: App = {
-    on(method: Methods, path: string, handler: Handler) {
+  const app = {
+    on(method, pathname, handler) {
       routes.push({
-        methods: method.toUpperCase(),
-        pattern: new URLPattern({ pathname: path }),
-        handler,
+        m: method.toUpperCase(),
+        p: new URLPattern({ pathname }),
+        h: handler,
       })
       return app
     },
 
-    async fetch(request, env = {}, executionContext) {
-      for (const { methods, pattern, handler } of routes) {
-        if (request.method === methods && pattern.test(request.url)) {
-          const response = await handler(request, {
-            env,
-            executionContext,
+    setHelper(name, helper) {
+      // @ts-expect-error Not typed well
+      helpers[name] = helper
+      return app
+    },
+
+    async fetch(req, env = {}, executionContext) {
+      let context: Context | undefined = undefined
+      for (const { m, p, h } of routes) {
+        const match = p.exec(req.url)
+        if (match && (req.method === m || m === '*')) {
+          context ??= { env, executionContext, match, vars, req }
+          const response = await h({
+            helper: (name, ...args) => {
+              const helper = helpers[name]
+              if (helper) return helper(context!, ...args)
+            },
+            ...context,
           })
-          if (response instanceof Response) return response
+          if (response instanceof Response) context.res = response
         }
+      }
+      if (context && context.res) {
+        return context.res
       }
       return new Response('Not Found', { status: 404 })
     },
-  }
+  } as App<THelpers>
 
   return app
 }
