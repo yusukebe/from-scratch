@@ -26,10 +26,10 @@ export function createApp<THelpers extends Record<string, Helper> = {}>() {
       return app
     },
 
-    fetch(request, env = {}, executionContext) {
+    async fetch(request, env = {}, executionContext) {
       for (const { m, p, h } of routes) {
         if (request.method === m && p.test(request.url)) {
-          const response = h(request, {
+          const response = await h(request, {
             helper: (name, ...args) => {
               const helper = helpers[name]
               if (helper) return helper(request, ...args)
