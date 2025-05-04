@@ -18,7 +18,7 @@ describe('Basic', () => {
     return new Response('Welcome!')
   })
 
-  app.on('GET', '/html', (_, helper) => {
+  app.on('GET', '/html', (_, { helper }) => {
     return helper('html', '<html>Hi</html>')
   })
 

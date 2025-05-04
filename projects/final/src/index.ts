@@ -1,4 +1,4 @@
-import type { Route, Helper, Handler, Methods } from './types'
+import type { Route, Helper, Handler, Methods, Fetch } from './types'
 
 export function createApp<THelpers extends Record<string, Helper> = {}>() {
   const routes: Route[] = []
@@ -7,7 +7,7 @@ export function createApp<THelpers extends Record<string, Helper> = {}>() {
   type App<H extends Record<string, Helper>> = {
     on(method: Methods, path: string, handler: Handler<H>): App<H>
     helper<K extends string, F extends Helper>(name: K, helper: F): App<H & Record<K, F>>
-    fetch(request: Request): Response | Promise<Response>
+    fetch: Fetch
   }
 
   const app = {
@@ -15,7 +15,6 @@ export function createApp<THelpers extends Record<string, Helper> = {}>() {
       routes.push({
         m: method.toUpperCase(),
         p: new URLPattern({ pathname: path }),
-        // @ts-expect-error Not typed well
         h: handler,
       })
       return app
@@ -27,12 +26,17 @@ export function createApp<THelpers extends Record<string, Helper> = {}>() {
       return app
     },
 
-    fetch(request) {
+    fetch(request, env = {}, executionContext) {
       for (const { m, p, h } of routes) {
         if (request.method === m && p.test(request.url)) {
-          const response = h(request, (name, ...args) => {
-            const helper = helpers[name]
-            if (helper) return helper(request, ...args)
+          const response = h(request, {
+            helper: (name, ...args) => {
+              const helper = helpers[name]
+              if (helper) return helper(request, ...args)
+            },
+            env,
+            // @ts-expect-error executionContext may be blank
+            executionContext,
           })
           if (response instanceof Response) return response
         }
