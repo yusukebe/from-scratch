@@ -1,4 +1,4 @@
-export type Handler = (request: Request) => Response
+export type Handler = (request: Request) => Response | Promise<Response> | void
 
 export type Methods = ('GET' | 'PUT' | 'POST' | 'DELETE') | (string & Record<never, never>)
 

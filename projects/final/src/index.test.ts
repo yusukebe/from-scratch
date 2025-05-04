@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest'
 describe('Basic', () => {
   const app = new FromScratch()
 
-  app.on('GET', '/welcome', () => {
+  app.on('get', '/welcome', () => {
     return new Response('Welcome!')
   })
 
@@ -34,5 +34,10 @@ describe('Basic', () => {
   it('should return 404 response - GET /not-found', () => {
     const res = app.fetch(new Request('http://example.com/not-found'))
     expect(res.status).toBe(404)
+  })
+
+  it('should return 200 response - GET /get/welcome', () => {
+    const res = app.fetch(new Request('http://example.com/get/welcome'))
+    expect(res.status).toBe(200)
   })
 })
