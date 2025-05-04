@@ -1,41 +1,32 @@
-import type { Route, Helper, Handler, Methods, Fetch } from './types'
+import type { Route, Handler, Methods } from './types'
 
-export function createApp<THelpers extends Record<string, Helper> = {}>() {
+type App = {
+  on: (method: Methods, path: string, handler: Handler) => App
+  fetch: (
+    req: Request,
+    env?: {},
+    executionContext?: ExecutionContext
+  ) => Response | Promise<Response>
+}
+
+export function createApp() {
   const routes: Route[] = []
-  const helpers = {} as THelpers
 
-  type App<H extends Record<string, Helper>> = {
-    on(method: Methods, path: string, handler: Handler<H>): App<H>
-    helper<K extends string, F extends Helper>(name: K, helper: F): App<H & Record<K, F>>
-    fetch: Fetch
-  }
-
-  const app = {
-    on(method, path, handler) {
+  const app: App = {
+    on(method: Methods, path: string, handler: Handler) {
       routes.push({
-        m: method.toUpperCase(),
-        p: new URLPattern({ pathname: path }),
-        h: handler,
+        methods: method.toUpperCase(),
+        pattern: new URLPattern({ pathname: path }),
+        handler,
       })
       return app
     },
 
-    helper(name, helper) {
-      // @ts-expect-error Not typed well
-      helpers[name] = helper
-      return app
-    },
-
     async fetch(request, env = {}, executionContext) {
-      for (const { m, p, h } of routes) {
-        if (request.method === m && p.test(request.url)) {
-          const response = await h(request, {
-            helper: (name, ...args) => {
-              const helper = helpers[name]
-              if (helper) return helper(request, ...args)
-            },
+      for (const { methods, pattern, handler } of routes) {
+        if (request.method === methods && pattern.test(request.url)) {
+          const response = await handler(request, {
             env,
-            // @ts-expect-error executionContext may be blank
             executionContext,
           })
           if (response instanceof Response) return response
@@ -43,7 +34,7 @@ export function createApp<THelpers extends Record<string, Helper> = {}>() {
       }
       return new Response('Not Found', { status: 404 })
     },
-  } as App<THelpers>
+  }
 
   return app
 }
