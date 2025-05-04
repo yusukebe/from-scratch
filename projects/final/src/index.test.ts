@@ -1,29 +1,39 @@
-import { FromScratch } from '.'
+import { createApp } from '.'
 import { describe, it, expect } from 'vitest'
 
 describe('Basic', () => {
-  const app = new FromScratch()
+  const app = createApp().helper('html', (_, html) => {
+    return new Response(html, {
+      headers: {
+        'Content-Type': 'text/html',
+      },
+    })
+  })
 
-  app.on('get', '/welcome', () => {
+  app.on('GET', '/welcome', () => {
     return new Response('Welcome!')
   })
 
-  app.on('get', '/welcome-method-lowercase', () => {
+  app.on('GET', '/welcome-method-lowercase', () => {
     return new Response('Welcome!')
   })
 
-  it('should return 200 response - GET /welcome', () => {
-    const res = app.fetch(new Request('http://example.com/welcome'))
+  app.on('GET', '/html', (_, helper) => {
+    return helper('html', '<html>Hi</html>')
+  })
+
+  it('should return 200 response - GET /welcome', async () => {
+    const res = await app.fetch(new Request('http://example.com/welcome'))
     expect(res.status).toBe(200)
   })
 
-  it('should return 200 response - GET /welcome-method-lowercase', () => {
-    const res = app.fetch(new Request('http://example.com/welcome-method-lowercase'))
+  it('should return 200 response - GET /welcome-method-lowercase', async () => {
+    const res = await app.fetch(new Request('http://example.com/welcome-method-lowercase'))
     expect(res.status).toBe(200)
   })
 
-  it('should return 404 response - POST /welcome', () => {
-    const res = app.fetch(
+  it('should return 404 response - POST /welcome', async () => {
+    const res = await app.fetch(
       new Request('http://example.com/welcome', {
         method: 'POST',
       })
@@ -31,13 +41,14 @@ describe('Basic', () => {
     expect(res.status).toBe(404)
   })
 
-  it('should return 404 response - GET /not-found', () => {
-    const res = app.fetch(new Request('http://example.com/not-found'))
+  it('should return 404 response - GET /not-found', async () => {
+    const res = await app.fetch(new Request('http://example.com/not-found'))
     expect(res.status).toBe(404)
   })
 
-  it('should return 200 response - GET /get/welcome', () => {
-    const res = app.fetch(new Request('http://example.com/get/welcome'))
+  it('should return 200 HTML response - GET /html', async () => {
+    const res = await app.fetch(new Request('http://example.com/html'))
     expect(res.status).toBe(200)
+    expect(res.headers.get('Content-Type')).toBe('text/html')
   })
 })

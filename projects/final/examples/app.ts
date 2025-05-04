@@ -1,9 +1,8 @@
-import { FromScratch } from '../src'
+import { createApp } from '../src'
 import { Hono } from 'hono'
 import { logger } from 'hono/logger'
 
-const app = new FromScratch()
-
+const app = createApp()
 const honoApp = new Hono()
 honoApp.use(logger())
 

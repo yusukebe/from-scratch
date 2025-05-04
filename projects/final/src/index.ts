@@ -1,24 +1,45 @@
-import type { Handler, Methods, Route } from './types'
+import type { Route, Helper, Handler, Methods } from './types'
 
-export class FromScratch {
-  #routes: Route[] = []
+export function createApp<THelpers extends Record<string, Helper> = {}>() {
+  const routes: Route[] = []
+  const helpers = {} as THelpers
 
-  on(method: Methods, path: string, handler: Handler) {
-    this.#routes.push({
-      method: method.toUpperCase(),
-      pattern: new URLPattern({ pathname: path }),
-      handler,
-    })
-    return this
+  type App<H extends Record<string, Helper>> = {
+    on(method: Methods, path: string, handler: Handler<H>): App<H>
+    helper<K extends string, F extends Helper>(name: K, helper: F): App<H & Record<K, F>>
+    fetch(request: Request): Response | Promise<Response>
   }
 
-  fetch(request: Request) {
-    for (const { method, pattern, handler } of this.#routes) {
-      if (request.method === method && pattern.test(request.url)) {
-        const response = handler(request)
-        if (response instanceof Response) return response
+  const app = {
+    on(method, path, handler) {
+      routes.push({
+        m: method.toUpperCase(),
+        p: new URLPattern({ pathname: path }),
+        // @ts-expect-error Not typed well
+        h: handler,
+      })
+      return app
+    },
+
+    helper(name, helper) {
+      // @ts-expect-error Not typed well
+      helpers[name] = helper
+      return app
+    },
+
+    fetch(request) {
+      for (const { m, p, h } of routes) {
+        if (request.method === m && p.test(request.url)) {
+          const response = h(request, (name, ...args) => {
+            const helper = helpers[name]
+            if (helper) return helper(request, ...args)
+          })
+          if (response instanceof Response) return response
+        }
       }
-    }
-    return new Response('Not Found', { status: 404 })
-  }
+      return new Response('Not Found', { status: 404 })
+    },
+  } as App<THelpers>
+
+  return app
 }

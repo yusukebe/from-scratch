@@ -6,7 +6,8 @@
     "strict": true,
     "skipLibCheck": true,
     "types": [
-      "node",
+      "@cloudflare/workers-types",
+      "vitest"
     ],
   },
   "include": [
