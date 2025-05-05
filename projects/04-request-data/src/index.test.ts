@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest'
 
 describe('04', () => {
   const app = createApp()
+
   app.on('GET', '/welcome', (c) => {
     const url = new URL(c.req.url)
     return new Response(`Welcome from ${url.pathname}`)

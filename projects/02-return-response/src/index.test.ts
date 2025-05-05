@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest'
 describe('02', () => {
   describe('200 OK', () => {
     const app = createApp()
+
     app.handler = () => new Response('Hi')
 
     it('should return 200 response - /', async () => {

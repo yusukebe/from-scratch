@@ -3,20 +3,25 @@ import { describe, it, expect } from 'vitest'
 
 describe('03', () => {
   const app = createApp()
+
   app.on('GET', '/welcome', () => {
     return new Response('Welcome')
   })
+
   app.on('get', '/welcome-lowercase', () => {
     return new Response('welcome')
   })
+
   app.on('GET', '/wildcard/*', () => {
     return new Response('Wildcard')
   })
+
   app.on('POST', '/posts', () => {
     return new Response('Created', {
       status: 201,
     })
   })
+
   app.on('*', '/method-wildcard', () => {
     return new Response('Method Wildcard')
   })
