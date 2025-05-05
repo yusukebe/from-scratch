@@ -34,19 +34,13 @@ export function createApp<THelpers extends Record<string, Helper> = {}>() {
         if (match && (req.method === m || m === '*')) {
           context ??= { env, executionContext, match, vars, req }
           const response = await h({
-            helper: (name, ...args) => {
-              const helper = helpers[name]
-              if (helper) return helper(context!, ...args)
-            },
+            helper: (name, ...args) => helpers[name]?.(context!, ...args),
             ...context,
           })
           if (response instanceof Response) context.res = response
         }
       }
-      if (context && context.res) {
-        return context.res
-      }
-      return new Response('Not Found', { status: 404 })
+      return context?.res || new Response('Not Found', { status: 404 })
     },
   } as App<THelpers>
 
