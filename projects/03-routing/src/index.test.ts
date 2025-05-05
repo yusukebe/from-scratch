@@ -1,7 +1,7 @@
 import { createApp } from '.'
 import { describe, it, expect } from 'vitest'
 
-describe('Basic', () => {
+describe('03', () => {
   const app = createApp()
   app.on('GET', '/welcome', () => {
     return new Response('Welcome')
@@ -16,6 +16,9 @@ describe('Basic', () => {
     return new Response('Created', {
       status: 201,
     })
+  })
+  app.on('*', '/method-wildcard', () => {
+    return new Response('Method Wildcard')
   })
 
   it('should return 200 response - /welcome', async () => {
@@ -44,6 +47,16 @@ describe('Basic', () => {
     )
     expect(res.status).toBe(201)
     expect(await res.text()).toBe('Created')
+  })
+
+  it('should return 200 response - /method-wildcard', async () => {
+    const res = app.fetch(
+      new Request('http://localhost/method-wildcard', {
+        method: 'PURGE',
+      })
+    )
+    expect(res.status).toBe(200)
+    expect(await res.text()).toBe('Method Wildcard')
   })
 
   it('should return 404 response - /', async () => {

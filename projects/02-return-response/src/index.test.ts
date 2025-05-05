@@ -1,7 +1,7 @@
 import { createApp } from '.'
 import { describe, it, expect } from 'vitest'
 
-describe('Basic', () => {
+describe('02', () => {
   describe('200 OK', () => {
     const app = createApp()
     app.handler = () => new Response('Hi')
