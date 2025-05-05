@@ -10,7 +10,7 @@ export function createApp() {
 
     fetch() {
       const res = handler?.()
-      return res instanceof Response ? res : new Response('Not Found', { status: 404 })
+      return res ?? new Response('Not Found', { status: 404 })
     },
   }
 }
